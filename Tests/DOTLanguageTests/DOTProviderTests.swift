@@ -30,5 +30,11 @@ struct DOTProviderTests {
         #expect(result.diagnostics.contains { $0.expected.contains("--") })
         #expect(result.diagnostics.contains { $0.expected.contains("}") })
         #expect(!result.recoveryEdits.isEmpty)
+        #expect(result.recoveryEdits.contains {
+            if case .replace(let terminal, let range, let replacement) = $0.action {
+                return terminal == "->" && replacement == "--" && range.length == 2
+            }
+            return false
+        })
     }
 }

@@ -199,19 +199,24 @@ private struct DOTStructureValidator {
         recoveryEdits += balanced.repairs.compactMap(providerEdit)
 
         let expectedEdge = graphKind == "GRAPH" ? "UNDIRECTED_EDGE" : "DIRECTED_EDGE"
-        for (tokenIndex, token) in tokens.enumerated() {
+        for token in tokens {
             if token.kind == "SEMICOLON" { statementCount += 1 }
             if token.kind == "DIRECTED_EDGE" || token.kind == "UNDIRECTED_EDGE",
                token.kind != expectedEdge {
-                diagnostics.append(.init(
+                let diagnostic = LanguageProviderDiagnostic(
                     severity: .error,
                     message: "Edge operator does not match graph kind",
                     range: .init(token.range.lowerBound, token.range.upperBound),
-                    expected: [DOTLexicon.spelling(expectedEdge)]))
-                recoveryEdits.append(.delete(
-                    terminal: DOTLexicon.spelling(token.kind), atToken: tokenIndex))
-                recoveryEdits.append(.insert(
-                    terminal: DOTLexicon.spelling(expectedEdge), atToken: tokenIndex))
+                    expected: [DOTLexicon.spelling(expectedEdge)])
+                diagnostics.append(diagnostic)
+                let range = SourceRange(
+                    token.range.lowerBound, token.range.upperBound)
+                recoveryEdits.append(.init(
+                    action: .replace(
+                        terminal: DOTLexicon.spelling(token.kind), range: range,
+                        with: DOTLexicon.spelling(expectedEdge)),
+                    expected: [DOTLexicon.spelling(expectedEdge)],
+                    diagnosticID: diagnostic.id))
             }
         }
         if statementCount == 0 && tokens.contains(where: { $0.kind == "LBRACE" }) {
@@ -233,10 +238,13 @@ private struct DOTStructureValidator {
     private mutating func insert(
         _ terminal: String, at index: Int, offset: Int, message: String
     ) {
-        diagnostics.append(.init(
+        let diagnostic = LanguageProviderDiagnostic(
             severity: .error, message: message,
-            range: .init(location: offset, length: 0), expected: [terminal]))
-        recoveryEdits.append(.insert(terminal: terminal, atToken: index))
+            range: .init(location: offset, length: 0), expected: [terminal])
+        diagnostics.append(diagnostic)
+        recoveryEdits.append(.init(
+            action: .insert(terminal: terminal, atUTF16Offset: offset),
+            expected: [terminal], diagnosticID: diagnostic.id))
     }
 
     private func providerEdit(
@@ -244,12 +252,24 @@ private struct DOTStructureValidator {
     ) -> LanguageProviderRecoveryEdit? {
         switch repair {
         case .insert(let kind, let offset):
-            let index = tokens.firstIndex { $0.range.lowerBound >= offset } ?? tokens.count
-            return .insert(terminal: DOTLexicon.spelling(kind), atToken: index)
-        case .delete(let id, _):
+            return .init(action: .insert(
+                terminal: DOTLexicon.spelling(kind), atUTF16Offset: offset))
+        case .delete(let id, let range):
             guard let index = tokens.firstIndex(where: { $0.id == id }) else { return nil }
-            return .delete(terminal: DOTLexicon.spelling(tokens[index].kind), atToken: index)
-        case .replace, .skip: return nil
+            return .init(action: .delete(
+                terminal: DOTLexicon.spelling(tokens[index].kind), range: range))
+        case .replace(let id, let range, let kind):
+            guard let index = tokens.firstIndex(where: { $0.id == id }) else { return nil }
+            return .init(action: .replace(
+                terminal: DOTLexicon.spelling(tokens[index].kind), range: range,
+                with: DOTLexicon.spelling(kind)))
+        case .skip(let ids, let range):
+            return .init(action: .skip(
+                terminals: ids.compactMap { id in
+                    tokens.first(where: { $0.id == id }).map {
+                        DOTLexicon.spelling($0.kind)
+                    }
+                }, range: range), cost: max(1, ids.count))
         }
     }
 }
