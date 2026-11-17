@@ -1,6 +1,15 @@
 {
-  "originHash" : "41f5bca208a35a45a2f0fdc6c785a062836807ee2edc7836737f2816e53b8582",
+  "originHash" : "2b90742621d66c6f10a91efb64e6827d8d5e8725270d9717e27e81574dabf549",
   "pins" : [
+    {
+      "identity" : "grammar",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hakkabon/Grammar.git",
+      "state" : {
+        "revision" : "f1a463faaa9d7ab23524a1168d20de460a36714d",
+        "version" : "0.9.1"
+      }
+    },
     {
       "identity" : "grammardiagram",
       "kind" : "remoteSourceControl",
@@ -11,12 +20,66 @@
       }
     },
     {
+      "identity" : "grammartokenizer",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hakkabon/GrammarTokenizer.git",
+      "state" : {
+        "revision" : "71a0bf3fa9f2bfe3399ba10ffd2b33eb4826c989",
+        "version" : "0.1.0"
+      }
+    },
+    {
       "identity" : "graphviz",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SwiftDocOrg/GraphViz",
       "state" : {
         "revision" : "74b6cbd8c5ecea9f64d84c4e1c88d65604dd033f",
         "version" : "0.4.1"
+      }
+    },
+    {
+      "identity" : "incremental-parsing",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hakkabon/Incremental-Parsing.git",
+      "state" : {
+        "revision" : "d4995a0efaa386b7e678118d4ab747aaf089b2d0",
+        "version" : "0.33.0"
+      }
+    },
+    {
+      "identity" : "language-tooling",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hakkabon/Language-Tooling.git",
+      "state" : {
+        "revision" : "cbe4da54173bb937831c47cbcc85442c509aee9a",
+        "version" : "0.10.1"
+      }
+    },
+    {
+      "identity" : "lexer",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hakkabon/Lexer.git",
+      "state" : {
+        "revision" : "81ecdee11a9ad5d62653d6e03c4817fa3c3bb38f",
+        "version" : "0.9.1"
+      }
+    },
+    {
+      "identity" : "lexer-fsa",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hakkabon/Lexer-FSA.git",
+      "state" : {
+        "revision" : "777ea30c2f1d5f929e94971c2176b45c2ce8fae5",
+        "version" : "0.2.0"
+      }
+    },
+    {
+      "identity" : "parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hakkabon/Parser.git",
+      "state" : {
+        "revision" : "852eeed7218b8547374da02f1edc29070508bf4d",
+        "version" : "0.12.1"
       }
     },
     {

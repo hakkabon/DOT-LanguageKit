@@ -23,6 +23,7 @@ public actor DOTProviderSession: LanguageToolingSession {
     private var text: String?
     private var revision: SourceRevision?
     private var elements: [GrammarLexicalElement] = []
+    private var preview: DOTGraphPreview = .invalid
 
     public init() {
         do {
@@ -35,6 +36,18 @@ public actor DOTProviderSession: LanguageToolingSession {
 
     public func analyze(_ snapshot: SourceSnapshot, change: SourceChange?) async throws
         -> LanguageProviderAnalysis {
+        try update(snapshot, change: change)
+    }
+
+    /// Produces a graph using the provider's lexer and structural diagnostics.
+    public func analyzeGraph(_ snapshot: SourceSnapshot, change: SourceChange? = nil) throws
+        -> DOTGraphPreview {
+        _ = try update(snapshot, change: change)
+        return preview
+    }
+
+    private func update(_ snapshot: SourceSnapshot, change: SourceChange?) throws
+        -> LanguageProviderAnalysis {
         if let change, change.after != snapshot {
             throw LanguageProviderError.inconsistentChange
         }
@@ -44,7 +57,19 @@ public actor DOTProviderSession: LanguageToolingSession {
         elements = lexed.output.elements
         let significant = lexed.output.tokens.filter { $0.kind != "$EOF" }
         var structure = DOTStructureValidator(tokens: significant)
-        structure.validate(endOffset: snapshot.text.utf16.count)
+        let endOffset = snapshot.text.utf16.count
+        structure.validate(endOffset: endOffset)
+        preview = .invalid
+        if lexed.output.diagnostics.isEmpty, structure.diagnostics.isEmpty {
+            var parser = DOTGraphParser(tokens: significant, endOffset: endOffset)
+            do {
+                preview = .graph(try parser.parse())
+            } catch DOTGraphParser.Failure.unsupported(let message) {
+                preview = .unsupported(message)
+            } catch DOTGraphParser.Failure.syntax(let message, let range) {
+                structure.diagnostics.append(.init(severity: .error, message: message, range: range))
+            }
+        }
         let metrics = lexed.metrics
 
         return LanguageProviderAnalysis(
@@ -106,6 +131,7 @@ private enum DOTLexicon {
         .init(name: "LBRACKET", matcher: .literal("[")),
         .init(name: "RBRACKET", matcher: .literal("]")),
         .init(name: "EQUAL", matcher: .literal("=")),
+        .init(name: "PLUS", matcher: .literal("+")),
         .init(name: "COLON", matcher: .literal(":")),
         .init(name: "SEMICOLON", matcher: .literal(";")),
         .init(name: "COMMA", matcher: .literal(",")),
@@ -176,7 +202,7 @@ private struct DOTStructureValidator {
             insert("graph", at: index, offset: range(at: index, fallback: endOffset).location,
                    message: "Expected 'graph' or 'digraph'")
         }
-        if ["ID", "STRING", "NUMBER"].contains(kind(at: index)) { index += 1 }
+        if ["ID", "STRING", "NUMBER", "NODE", "EDGE", "GRAPH", "HTML"].contains(kind(at: index)) { index += 1 }
         if kind(at: index) != "LBRACE" {
             insert("{", at: index, offset: range(at: index, fallback: endOffset).location,
                    message: "Expected '{' before graph statements")
