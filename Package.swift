@@ -3,14 +3,14 @@ import PackageDescription
 
 let package = Package(
     name: "DOT-LanguageKit",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v13), .iOS(.v14)],
     products: [.library(name: "DOTLanguage", targets: ["DOTLanguage"])],
     dependencies: [
         .package(url: "https://github.com/hakkabon/Grammar.git", .upToNextMinor(from: "0.9.1")),
         .package(url: "https://github.com/hakkabon/Lexer.git", .upToNextMinor(from: "0.9.1")),
         .package(url: "https://github.com/hakkabon/Parser.git", .upToNextMinor(from: "0.12.1")),
         .package(url: "https://github.com/hakkabon/Incremental-Parsing.git", .upToNextMinor(from: "0.33.0")),
-        .package(url: "https://github.com/hakkabon/Language-Tooling.git", .upToNextMinor(from: "0.10.1")),
+        .package(url: "https://github.com/hakkabon/Language-Tooling.git", .upToNextMinor(from: "0.10.2")),
     ],
     targets: [
         .target(name: "DOTLanguage", dependencies: [
